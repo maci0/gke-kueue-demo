@@ -149,7 +149,7 @@ spec:
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: ClusterQueue
 metadata:
-  name: "nvidia-t4-cluster-hybrid"
+  name: "nvidia-t4-hybrid"
 spec:
   namespaceSelector: {} # match all.
   resourceGroups:
