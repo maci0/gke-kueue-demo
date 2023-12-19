@@ -1,0 +1,128 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nvidia-t4-sample-job-reserved
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: nvidia-t4-reserved
+spec:
+  parallelism: 1
+  completions: 1
+  suspend: true
+  template:
+    spec:
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: dummy-job
+        image: gcr.io/k8s-staging-perf-tests/sleep:v0.0.3
+        args: ["2h"]
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nvidia-t4-sample-job-ondemand
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: nvidia-t4-ondemand
+spec:
+  parallelism: 1
+  completions: 1
+  suspend: true
+  template:
+    spec:
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: dummy-job
+        image: gcr.io/k8s-staging-perf-tests/sleep:v0.0.3
+        args: ["2h"]
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nvidia-t4-sample-job-dws
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: nvidia-t4-queued
+spec:
+  parallelism: 1
+  completions: 1
+  suspend: true
+  template:
+    spec:
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: dummy-job
+        image: gcr.io/k8s-staging-perf-tests/sleep:v0.0.3
+        args: ["2h"]
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nvidia-t4-sample-job-hybrid
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: nvidia-t4-hybrid
+spec:
+  parallelism: 6
+  completions: 1
+  suspend: true
+  template:
+    spec:
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: dummy-job
+        image: gcr.io/k8s-staging-perf-tests/sleep:v0.0.3
+        args: ["2h"]
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+---

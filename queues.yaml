@@ -1,0 +1,185 @@
+# Admission controller setup and config
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: AdmissionCheck
+metadata:
+  name: nvidia-t4-queued
+spec:
+  controllerName: kueue.x-k8s.io/provisioning-request
+  parameters:
+    apiGroup: kueue.x-k8s.io
+    kind: ProvisioningRequestConfig
+    name: nvidia-t4-queued-config
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ProvisioningRequestConfig
+metadata:
+  name: nvidia-t4-queued-config
+spec:
+  provisioningClassName: queued-provisioning.gke.io
+  managedResources:
+  - nvidia.com/gpu
+---
+
+# Resource flavor for reserved instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: "nvidia-t4-reserved"
+spec:
+  nodeLabels:
+    cloud.google.com/gke-accelerator: nvidia-tesla-t4
+    tier: reserved
+---
+
+# Resource flavor for ondemand autoscaling instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: "nvidia-t4-ondemand"
+spec:
+  nodeLabels:
+    cloud.google.com/gke-accelerator: nvidia-tesla-t4
+    tier: ondemand
+---
+
+# Resource flavor for ondemand dws provisioned instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: "nvidia-t4-queued"
+spec:
+  nodeLabels:
+    cloud.google.com/gke-accelerator: nvidia-tesla-t4
+    tier: queued
+---
+
+# Cluster queue for reserved instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "nvidia-t4-reserved"
+spec:
+  namespaceSelector: {} # match all.
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: "nvidia-t4-reserved"
+      resources:
+      - name: "cpu"
+        nominalQuota: 10000  # Infinite quota.
+      - name: "memory"
+        nominalQuota: 10000Gi # Infinite quota.
+      - name: "nvidia.com/gpu"
+        nominalQuota: 1 # 1 GPUs available here
+---
+
+# Local queue for reserved instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "default"
+  name: "nvidia-t4-reserved"
+spec:
+  clusterQueue: "nvidia-t4-reserved"
+---
+
+# Cluster queue for ondemand autoscaling instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "nvidia-t4-ondemand"
+spec:
+  namespaceSelector: {} # match all.
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: "nvidia-t4-ondemand"
+      resources:
+      - name: "cpu"
+        nominalQuota: 10000  # Infinite quota.
+      - name: "memory"
+        nominalQuota: 10000Gi # Infinite quota.
+      - name: "nvidia.com/gpu"
+        nominalQuota: 10000  # Infinite quota.
+---
+
+# Local queue for ondemand autoscaling instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "default"
+  name: "nvidia-t4-ondemand"
+spec:
+  clusterQueue: "nvidia-t4-ondemand"
+---
+
+# Cluster queue for ondemand dws provisioned instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "nvidia-t4-queued"
+spec:
+  namespaceSelector: {} # match all.
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: "nvidia-t4-queued"
+      resources:
+      - name: "cpu"
+        nominalQuota: 10000  # Infinite quota.
+      - name: "memory"
+        nominalQuota: 10000Gi # Infinite quota.
+      - name: "nvidia.com/gpu"
+        nominalQuota: 3 # 1 GPUs available here
+  admissionChecks:
+  - nvidia-t4-queued
+---
+
+# Local queue for ondemand dws provisioned instances
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "default"
+  name: "nvidia-t4-queued"
+spec:
+  clusterQueue: "nvidia-t4-queued"
+---
+
+# Cluster queue for hybrid queues, reserved and ondemand autoscaling
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "nvidia-t4-cluster-hybrid"
+spec:
+  namespaceSelector: {} # match all.
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: "nvidia-t4-reserved"
+      resources:
+      - name: "cpu"
+        nominalQuota: 10000  # Infinite quota.
+      - name: "memory"
+        nominalQuota: 10000Gi # Infinite quota.
+      - name: "nvidia.com/gpu"
+        nominalQuota: 1 # 1 GPUs available here
+    - name: "nvidia-t4-ondemand"
+      resources:
+      - name: "cpu"
+        nominalQuota: 10000  # Infinite quota.
+      - name: "memory"
+        nominalQuota: 10000Gi # Infinite quota.
+      - name: "nvidia.com/gpu"
+        nominalQuota: 10000  # Infinite quota.
+  preemption:
+    reclaimWithinCohort: LowerPriority
+---
+
+# Local queue for hybrid queues, reserved and ondemand autoscaling
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: "default"
+  name: "nvidia-t4-hybrid"
+spec:
+  clusterQueue: "nvidia-t4-hybrid"

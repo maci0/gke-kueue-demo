@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sleep
+  namespace: default
+spec:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: nvidia-t4-reserved
+  containers:
+  - args:
+    - 1h
+    image: gcr.io/k8s-staging-perf-tests/sleep:v0.0.3
+    imagePullPolicy: IfNotPresent
+    name: sleep
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "100Mi"
+        nvidia.com/gpu: 1
+      limits:
+        cpu: "100m"
+        memory: "100Mi"
+        nvidia.com/gpu: 1
+  tolerations:
+    - key: "nvidia.com/gpu"
+      operator: "Exists"
+      effect: "NoSchedule"
+  restartPolicy: Always
